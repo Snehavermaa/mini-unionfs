@@ -9,52 +9,49 @@ It merges two directories:
 * **Lower Directory (`lower/`)** → Read-only base layer
 * **Upper Directory (`upper/`)** → Read-write layer
 
-into a single **virtual mount point (`mnt/`)** that presents a unified view.
+into a single **virtual mount point (`mnt/`)**, providing a unified filesystem view.
 
 ---
 
-## 🧠 Key Concepts
+## 🧠 Key Features
 
 ### 🔁 Copy-on-Write (CoW)
 
-When a file from the lower directory is modified:
-
-* A copy is created in the upper directory
-* Modifications are applied only to the copy
-* Original file remains unchanged
+* Modifying a file from `lower/` creates a copy in `upper/`
+* Changes are applied only to the copied file
+* Original data remains untouched
 
 ---
 
 ### ❌ Whiteout Mechanism
 
-When a file from the lower directory is deleted:
-
-* A hidden file `.wh.<filename>` is created in the upper directory
-* This hides the file from the merged view without deleting it from lower
+* Deleting a file from `lower/` creates `.wh.<filename>` in `upper/`
+* This hides the file from the merged view without deleting it
 
 ---
 
 ### 📂 Layer Merging
 
 * Files in `upper/` override files in `lower/`
-* If a file exists only in `lower/`, it is still visible in `mnt/`
+* Files only in `lower/` are still visible in `mnt/`
 
 ---
 
 ## 🏗️ Project Structure
 
-```
+```text
 mini-unionfs/
 │
-├── main.c              # Core FUSE filesystem implementation
-├── unionfs.h           # Data structures and helper functions
-├── Makefile            # Build configuration
-├── test_unionfs.sh     # Test script
-├── README.md           # Project documentation
+├── main.c                 # Core filesystem logic (FUSE operations)
+├── unionfs.h              # Data structures and helper functions
+├── Makefile               # Build configuration
+├── test_unionfs.sh        # Automated test script
+├── README.md              # Documentation
+├── Mini-UnionFS.pdf       # Design Document (2–3 pages)
 │
-├── lower/              # Read-only base layer (input)
-├── upper/              # Writable layer
-├── mnt/                # Mount point (merged output)
+├── lower/                 # Read-only base layer (input)
+├── upper/                 # Writable layer
+├── mnt/                   # Mount point (merged output)
 ```
 
 ---
@@ -80,7 +77,7 @@ make
 
 ## 🚀 Usage
 
-### Step 1: Create directories
+### Step 1: Setup directories
 
 ```bash
 mkdir lower upper mnt
@@ -89,7 +86,7 @@ echo "hello from lower" > lower/file.txt
 
 ---
 
-### Step 2: Run the filesystem
+### Step 2: Run filesystem
 
 ```bash
 ./mini_unionfs lower upper mnt
@@ -97,7 +94,7 @@ echo "hello from lower" > lower/file.txt
 
 ---
 
-### Step 3: Open a new terminal and test
+### Step 3: Open a new terminal and interact
 
 ```bash
 ls mnt
@@ -106,7 +103,7 @@ cat mnt/file.txt
 
 ---
 
-## 🧪 Testing Features
+## 🧪 Testing Functionality
 
 ### 🔁 Copy-on-Write
 
@@ -114,16 +111,16 @@ cat mnt/file.txt
 echo "edit" >> mnt/file.txt
 ```
 
-Check:
+Verify:
 
 ```bash
-cat upper/file.txt   # modified
-cat lower/file.txt   # unchanged
+cat upper/file.txt   # Modified version
+cat lower/file.txt   # Original unchanged
 ```
 
 ---
 
-### ❌ Whiteout (Delete)
+### ❌ Whiteout (Deletion)
 
 ```bash
 rm mnt/file.txt
@@ -132,13 +129,13 @@ ls upper
 
 Expected:
 
-```
+```text
 .wh.file.txt
 ```
 
 ---
 
-### ➕ Create File
+### ➕ File Creation
 
 ```bash
 touch mnt/new.txt
@@ -147,7 +144,7 @@ ls upper
 
 ---
 
-### 📁 Create Directory
+### 📁 Directory Creation
 
 ```bash
 mkdir mnt/testdir
@@ -166,37 +163,25 @@ fusermount -u mnt
 
 ## 🧠 How It Works
 
-The filesystem intercepts file operations using FUSE and:
+* FUSE intercepts filesystem calls from the OS
+* `resolve_path` determines file location (upper/lower/hidden)
+* `readdir` merges directory contents
+* `open` handles Copy-on-Write
+* `unlink` implements whiteout logic
 
-* Resolves paths between `upper/` and `lower/`
-* Applies Copy-on-Write when needed
-* Uses whiteout files to handle deletions
-* Merges directory listings dynamically
+---
+
+## 📄 Design Document
+
+The detailed design, architecture, and edge-case handling are documented in:
+
+👉 **Mini-UnionFS.pdf**
 
 ---
 
 ## 🎯 Applications
 
-This project demonstrates concepts used in:
-
-* 🐳 Docker & Container Filesystems
-* 📦 OverlayFS
-* 🖥️ Virtual Filesystems in Linux
-
----
-
-## 📌 Notes
-
-* Do not modify files directly in `mnt/` without mounting
-* Always unmount before deleting directories
-* Requires Linux environment with FUSE support
-
----
-
-## 🚀 Status
-
-✅ Fully functional
-✅ Supports CoW and Whiteout
-✅ Ready for academic submission
-
+* Docker container filesystems
+* OverlayFS in Linux
+* Layered storage systems
 ---
