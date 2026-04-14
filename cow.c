@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <limits.h>
 #include <errno.h>
-
+#define FUSE_USE_VERSION 31
 #include "cow.h"
 
 // Access shared struct from main
